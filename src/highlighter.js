@@ -35,6 +35,7 @@ export default class SyntaxHighlighter {
     // Apply syntax highlighting to a given element
     static highlight(element) {
         let html = element.innerHTML;
+        html = SyntaxHighlighter.dedentHTML(html);
         // Step 1: Escape HTML special characters to prevent interpretation
         html = SyntaxHighlighter.escapeHTML(html);
         // Step 2: Highlight HTML comments
@@ -45,6 +46,28 @@ export default class SyntaxHighlighter {
         html = SyntaxHighlighter.colorTags(html);
         // Replace the original content with the highlighted version
         element.innerHTML = html;
+    }
+
+    // Remove leading and trailing whitespace from the text
+    static dedentHTML(text) {
+        const cleanedText = String(text)
+            .replace(/^\s*\n/, "")
+            .replace(/\s+$/, "");
+
+        const lines = cleanedText.split("\n");
+
+        const nonEmptyLines = lines.filter(line => line.trim().length > 0);
+        if (nonEmptyLines.length === 0) return "";
+
+        const indentSizes = nonEmptyLines.map(line => {
+            const match = line.match(/^[\t ]*/);
+            return match ? match[0].length : 0;
+        });
+        const smallestIndent = Math.min(...indentSizes);
+
+        return lines
+            .map(line => line.replace(new RegExp(`^[\\t ]{0,${smallestIndent}}`), ""))
+            .join("\n");
     }
 
     // Escape HTML entities (< and >) to prevent parsing
